@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Capability Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        button { padding: 10px 15px; background: #0077c5; color: white; border: none; cursor: pointer; margin: 10px 0; }
+        .result { margin-top: 10px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Browser Capability Test</h1>
+    
+    <h2>1. Browser Information</h2>
+    <button id="checkBrowser">Check Browser Capabilities</button>
+    <div id="browserResult" class="result">Click the button to check browser capabilities</div>
+    
+    <h2>2. Network Connectivity</h2>
+    <button id="testNetwork">Test Network Connectivity</button>
+    <div id="networkResult" class="result">Click the button to test network connectivity</div>
+    
+    <h2>3. API Server Test</h2>
+    <button id="testAPI">Test API Server</button>
+    <div id="apiResult" class="result">Click the button to test API server</div>
+    
+    <h2>4. Signup Test</h2>
+    <div>
+        <input type="email" id="email" placeholder="Email" value="test999@example.com">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <input type="text" id="firstName" placeholder="First Name" value="Test">
+        <input type="text" id="lastName" placeholder="Last Name" value="User">
+        <button id="testSignup">Test Signup</button>
+    </div>
+    <div id="signupResult" class="result">Click the button to test signup</div>
+    
+    <h2>5. Local Storage Test</h2>
+    <button id="testStorage">Test Local Storage</button>
+    <div id="storageResult" class="result">Click the button to test local storage</div>
+    
+    <script>
+        // 1. Browser Information
+        document.getElementById('checkBrowser').addEventListener('click', () => {
+            const result = document.getElementById('browserResult');
+            try {
+                const info = {
+                    userAgent: navigator.userAgent,
+                    cookiesEnabled: navigator.cookieEnabled,
+                    language: navigator.language,
+                    platform: navigator.platform,
+                    localStorage: typeof localStorage !== 'undefined',
+                    sessionStorage: typeof sessionStorage !== 'undefined',
+                    fetch: typeof fetch !== 'undefined',
+                    json: typeof JSON !== 'undefined'
+                };
+                
+                result.innerHTML = JSON.stringify(info, null, 2);
+                result.className = 'result success';
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+                result.className = 'result error';
+            }
+        });
+        
+        // 2. Network Connectivity
+        document.getElementById('testNetwork').addEventListener('click', async () => {
+            const result = document.getElementById('networkResult');
+            result.innerHTML = 'Testing network connectivity...';
+            
+            try {
+                // Test connection to Google
+                const googleStart = performance.now();
+                const googleResponse = await fetch('https://www.google.com', { mode: 'no-cors' });
+                const googleTime = performance.now() - googleStart;
+                
+                // Test connection to localhost frontend
+                const frontendStart = performance.now();
+                const frontendResponse = await fetch('http://localhost:3001/js/config.js');
+                const frontendTime = performance.now() - frontendStart;
+                const frontendStatus = frontendResponse.status;
+                
+                result.innerHTML = `
+                    Google: Connected (${googleTime.toFixed(2)}ms)
+                    Frontend Server: ${frontendStatus === 200 ? 'Connected' : 'Error'} (${frontendTime.toFixed(2)}ms, Status: ${frontendStatus})
+                `;
+                result.className = 'result success';
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+                result.className = 'result error';
+            }
+        });
+        
+        // 3. API Server Test
+        document.getElementById('testAPI').addEventListener('click', async () => {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = 'Testing API server...';
+            
+            try {
+                // Test connection to API health endpoint
+                const apiStart = performance.now();
+                const apiResponse = await fetch('http://localhost:3030/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const apiTime = performance.now() - apiStart;
+                const apiStatus = apiResponse.status;
+                const apiData = await apiResponse.json();
+                
+                result.innerHTML = `
+                    API Server: ${apiStatus === 200 ? 'Connected' : 'Error'} (${apiTime.toFixed(2)}ms, Status: ${apiStatus})
+                    Response: ${JSON.stringify(apiData, null, 2)}
+                    Headers: ${JSON.stringify(Object.fromEntries([...apiResponse.headers.entries()]), null, 2)}
+                `;
+                result.className = 'result success';
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}\n\nThis could be due to CORS issues or the API server not running.`;
+                result.className = 'result error';
+            }
+        });
+        
+        // 4. Signup Test
+        document.getElementById('testSignup').addEventListener('click', async () => {
+            const result = document.getElementById('signupResult');
+            result.innerHTML = 'Testing signup...';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            
+            try {
+                // Test signup endpoint with different configurations
+                
+                // 1. Basic fetch with no special options
+                result.innerHTML = 'Testing basic fetch...';
+                try {
+                    const basicResponse = await fetch('http://localhost:3030/api/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password, firstName, lastName })
+                    });
+                    
+                    const basicData = await basicResponse.json();
+                    result.innerHTML = `
+                        Basic fetch: ${basicResponse.status === 201 ? 'Success' : 'Error'} (Status: ${basicResponse.status})
+                        Response: ${JSON.stringify(basicData, null, 2)}
+                    `;
+                    
+                    if (basicResponse.status === 201) {
+                        // Store token and user in localStorage
+                        localStorage.setItem('jwt_token', basicData.token);
+                        localStorage.setItem('user', JSON.stringify(basicData.user));
+                        result.innerHTML += '\n\nToken and user data stored in localStorage.';
+                    }
+                    
+                    result.className = 'result success';
+                    return;
+                } catch (basicError) {
+                    result.innerHTML = `Basic fetch error: ${basicError.message}\n\n`;
+                }
+                
+                // 2. Fetch with mode: 'cors'
+                result.innerHTML += 'Testing fetch with mode: cors...';
+                try {
+                    const corsResponse = await fetch('http://localhost:3030/api/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        mode: 'cors',
+                        body: JSON.stringify({ email, password, firstName, lastName })
+                    });
+                    
+                    const corsData = await corsResponse.json();
+                    result.innerHTML += `
+                        Fetch with mode: cors: ${corsResponse.status === 201 ? 'Success' : 'Error'} (Status: ${corsResponse.status})
+                        Response: ${JSON.stringify(corsData, null, 2)}
+                    `;
+                    
+                    if (corsResponse.status === 201) {
+                        // Store token and user in localStorage
+                        localStorage.setItem('jwt_token', corsData.token);
+                        localStorage.setItem('user', JSON.stringify(corsData.user));
+                        result.innerHTML += '\n\nToken and user data stored in localStorage.';
+                    }
+                    
+                    result.className = 'result success';
+                    return;
+                } catch (corsError) {
+                    result.innerHTML += `\nFetch with mode: cors error: ${corsError.message}\n\n`;
+                }
+                
+                // 3. XMLHttpRequest as fallback
+                result.innerHTML += 'Testing XMLHttpRequest as fallback...';
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:3030/api/signup', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onload = function() {
+                    if (xhr.status === 201) {
+                        const xhrData = JSON.parse(xhr.responseText);
+                        result.innerHTML += `
+                            XMLHttpRequest: Success (Status: ${xhr.status})
+                            Response: ${JSON.stringify(xhrData, null, 2)}
+                        `;
+                        
+                        // Store token and user in localStorage
+                        localStorage.setItem('jwt_token', xhrData.token);
+                        localStorage.setItem('user', JSON.stringify(xhrData.user));
+                        result.innerHTML += '\n\nToken and user data stored in localStorage.';
+                        
+                        result.className = 'result success';
+                    } else {
+                        result.innerHTML += `
+                            XMLHttpRequest: Error (Status: ${xhr.status})
+                            Response: ${xhr.responseText}
+                        `;
+                        result.className = 'result error';
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    result.innerHTML += `\nXMLHttpRequest error: Network error`;
+                    result.className = 'result error';
+                };
+                
+                xhr.send(JSON.stringify({ email, password, firstName, lastName }));
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+                result.className = 'result error';
+            }
+        });
+        
+        // 5. Local Storage Test
+        document.getElementById('testStorage').addEventListener('click', () => {
+            const result = document.getElementById('storageResult');
+            
+            try {
+                // Test localStorage
+                localStorage.setItem('test_key', 'test_value');
+                const storedValue = localStorage.getItem('test_key');
+                localStorage.removeItem('test_key');
+                
+                // Check existing auth data
+                const token = localStorage.getItem('jwt_token');
+                const user = localStorage.getItem('user');
+                
+                result.innerHTML = `
+                    localStorage Test: ${storedValue === 'test_value' ? 'Success' : 'Failed'}
+                    Existing Token: ${token ? 'Found' : 'Not found'}
+                    Existing User: ${user ? 'Found' : 'Not found'}
+                    
+                    Token: ${token || 'N/A'}
+                    User: ${user || 'N/A'}
+                `;
+                result.className = 'result success';
+            } catch (error) {
+                result.innerHTML = `Error: ${error.message}`;
+                result.className = 'result error';
+            }
+        });
+    </script>
+</body>
+</html> 

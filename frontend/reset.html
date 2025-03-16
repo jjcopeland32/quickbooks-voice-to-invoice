@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBooks Voice-to-Invoice - Reset Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #0077c5;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        button {
+            background-color: #0077c5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button.danger {
+            background-color: #d9534f;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuickBooks Voice-to-Invoice - Reset Application</h1>
+    
+    <div class="card">
+        <h2>Application Reset Tools</h2>
+        <p>Use these tools to reset the application state if you're experiencing issues with the login or registration functionality.</p>
+        
+        <h3>1. Clear Local Storage</h3>
+        <p>This will clear all stored data including authentication tokens and user information.</p>
+        <button id="clearStorage">Clear Local Storage</button>
+        
+        <h3>2. Reset UI State</h3>
+        <p>This will reset the UI state to its initial configuration.</p>
+        <button id="resetUI">Reset UI State</button>
+        
+        <h3>3. Complete Reset</h3>
+        <p>This will perform a complete reset of the application (clears storage and resets UI).</p>
+        <button id="completeReset" class="danger">Complete Reset</button>
+    </div>
+    
+    <div class="card">
+        <h2>Current Application State</h2>
+        <div id="stateInfo"></div>
+    </div>
+    
+    <div class="result" id="result"></div>
+    
+    <div class="card">
+        <h2>Return to Application</h2>
+        <p>After resetting, you can return to the main application.</p>
+        <button id="returnToApp">Return to Application</button>
+    </div>
+    
+    <script>
+        // Display current state information
+        function updateStateInfo() {
+            const stateInfo = document.getElementById('stateInfo');
+            const token = localStorage.getItem('qb_voice_auth_token');
+            const user = localStorage.getItem('qb_voice_user');
+            
+            let html = '<h3>Local Storage</h3>';
+            html += '<ul>';
+            html += `<li>Authentication Token: ${token ? 'Present' : 'Not found'}</li>`;
+            html += `<li>User Data: ${user ? 'Present' : 'Not found'}</li>`;
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    html += '<ul>';
+                    html += `<li>Email: ${userData.email || 'N/A'}</li>`;
+                    html += `<li>Name: ${userData.firstName || ''} ${userData.lastName || ''}</li>`;
+                    html += '</ul>';
+                } catch (e) {
+                    html += '<li>Error parsing user data</li>';
+                }
+            }
+            
+            html += '</ul>';
+            
+            // List all localStorage items
+            html += '<h3>All LocalStorage Items</h3>';
+            html += '<ul>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                let value = localStorage.getItem(key);
+                
+                // Truncate long values
+                if (value && value.length > 50) {
+                    value = value.substring(0, 50) + '...';
+                }
+                
+                html += `<li><strong>${key}</strong>: ${value}</li>`;
+            }
+            html += '</ul>';
+            
+            stateInfo.innerHTML = html;
+        }
+        
+        // Clear localStorage
+        document.getElementById('clearStorage').addEventListener('click', () => {
+            try {
+                localStorage.clear();
+                updateStateInfo();
+                showResult('Local storage cleared successfully', 'success');
+            } catch (error) {
+                showResult(`Error clearing local storage: ${error.message}`, 'error');
+            }
+        });
+        
+        // Reset UI state (this will be applied when returning to the main app)
+        document.getElementById('resetUI').addEventListener('click', () => {
+            try {
+                // Store a flag in localStorage to indicate that UI should be reset
+                localStorage.setItem('reset_ui_state', 'true');
+                showResult('UI state will be reset when you return to the application', 'success');
+            } catch (error) {
+                showResult(`Error setting UI reset flag: ${error.message}`, 'error');
+            }
+        });
+        
+        // Complete reset
+        document.getElementById('completeReset').addEventListener('click', () => {
+            try {
+                localStorage.clear();
+                localStorage.setItem('reset_ui_state', 'true');
+                updateStateInfo();
+                showResult('Complete reset successful. The application will be reset when you return.', 'success');
+            } catch (error) {
+                showResult(`Error performing complete reset: ${error.message}`, 'error');
+            }
+        });
+        
+        // Return to application
+        document.getElementById('returnToApp').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+        
+        // Show result message
+        function showResult(message, type) {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = message;
+            resultElement.className = 'result ' + type;
+        }
+        
+        // Initialize
+        updateStateInfo();
+    </script>
+</body>
+</html> 

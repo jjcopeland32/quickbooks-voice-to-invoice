@@ -1,0 +1,209 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+    "name": "QuickBooks Voice-to-Invoice API",
+    "description": "API collection for QuickBooks Voice-to-Invoice application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health",
+        "description": "Check if the API server is running"
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/signup",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "description": "Register a new user"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "description": "Login a user"
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/profile",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "description": "Get user profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuickBooks OAuth",
+      "item": [
+        {
+          "name": "Initiate OAuth",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/qbo",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "description": "Initiate the QuickBooks OAuth flow"
+          }
+        },
+        {
+          "name": "Revoke QuickBooks Connection",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/auth/qbo",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "description": "Revoke QuickBooks connection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Voice Processing",
+      "item": [
+        {
+          "name": "Process Voice Input",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/process-voice",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audio\": \"base64_encoded_audio_data\",\n  \"field\": \"customerName\"\n}"
+            },
+            "description": "Process voice input for a specific field"
+          }
+        },
+        {
+          "name": "Refine Text",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/refine-text",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"text to refine\",\n  \"field\": \"customerName\"\n}"
+            },
+            "description": "Refine text using OpenAI"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Create Invoice",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/invoices",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Acme Inc\",\n  \"serviceDescription\": \"Web Development Services\",\n  \"amount\": 1000.00,\n  \"dueDate\": \"2023-12-31\",\n  \"notes\": \"Thank you for your business\"\n}"
+            },
+            "description": "Create an invoice in QuickBooks"
+          }
+        },
+        {
+          "name": "Get Invoices",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/invoices",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "description": "Get user's invoices from QuickBooks"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    }
+  ]
+} 

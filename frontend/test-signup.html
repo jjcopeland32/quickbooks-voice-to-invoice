@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; }
+        button { padding: 10px 15px; background: #0077c5; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Signup API Test</h1>
+    
+    <form id="signupForm">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required value="test1234@example.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" required value="password123">
+        </div>
+        <div class="form-group">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" value="Test">
+        </div>
+        <div class="form-group">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" value="User">
+        </div>
+        <button type="submit">Test Signup</button>
+    </form>
+    
+    <h2>Result:</h2>
+    <div id="result">No request sent yet.</div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Making signup request...';
+            resultDiv.style.color = 'black';
+            
+            try {
+                console.log('Making request to: http://localhost:3030/api/signup');
+                console.log('With data:', { email, firstName, lastName, password: '***' });
+                
+                const response = await fetch('http://localhost:3030/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password, firstName, lastName })
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.style.color = 'green';
+                    resultDiv.innerHTML = `
+                        <p>Status: ${response.status}</p>
+                        <p>Response: ${JSON.stringify(data, null, 2)}</p>
+                    `;
+                } else {
+                    resultDiv.style.color = 'red';
+                    resultDiv.innerHTML = `
+                        <p>Error Status: ${response.status}</p>
+                        <p>Response: ${JSON.stringify(data, null, 2)}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.style.color = 'red';
+                resultDiv.innerHTML = `
+                    <p>Error: ${error.message}</p>
+                `;
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,22 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#paint0_linear)"/>
+  
+  <!-- Microphone shape -->
+  <path d="M32 38C35.3137 38 38 35.3137 38 32V22C38 18.6863 35.3137 16 32 16C28.6863 16 26 18.6863 26 22V32C26 35.3137 28.6863 38 32 38Z" fill="white"/>
+  
+  <!-- Microphone stand -->
+  <path d="M22 30V32C22 37.5228 26.4771 42 32 42C37.5228 42 42 37.5228 42 32V30" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Sound waves -->
+  <path d="M32 42V48" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 48H38" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00A6ED"/>
+      <stop offset="1" stop-color="#2CA01C"/>
+    </linearGradient>
+  </defs>
+</svg> 

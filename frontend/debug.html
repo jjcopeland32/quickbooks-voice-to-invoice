@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBooks Voice-to-Invoice (Debug Mode)</title>
+    <meta name="description" content="Create QuickBooks invoices using voice commands">
+    
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; }
+        button { padding: 10px 15px; background: #0077c5; color: white; border: none; cursor: pointer; margin: 10px 0; }
+        .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .success { color: green; }
+        .error { color: red; }
+        .hidden { display: none; }
+        #console-log { 
+            margin-top: 20px; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            background-color: #f5f5f5; 
+            height: 200px; 
+            overflow-y: auto; 
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuickBooks Voice-to-Invoice (Debug Mode)</h1>
+    
+    <div id="debug-controls">
+        <h2>Debug Controls</h2>
+        <button id="clear-logs">Clear Console Logs</button>
+        <button id="clear-storage">Clear Local Storage</button>
+        <button id="check-config">Check Configuration</button>
+    </div>
+    
+    <div id="auth-section">
+        <h2>Authentication</h2>
+        
+        <div id="auth-tabs">
+            <button id="show-login-tab" class="tab-btn active">Login</button>
+            <button id="show-signup-tab" class="tab-btn">Signup</button>
+        </div>
+        
+        <div id="login-form" class="auth-form">
+            <h3>Login</h3>
+            <form id="login-form-element">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required value="password123">
+                </div>
+                <button type="submit" id="login-submit">Login</button>
+            </form>
+        </div>
+        
+        <div id="signup-form" class="auth-form hidden">
+            <h3>Signup</h3>
+            <form id="signup-form-element">
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" required value="test999@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" required value="password123">
+                </div>
+                <div class="form-group">
+                    <label for="signup-firstName">First Name</label>
+                    <input type="text" id="signup-firstName" value="Test">
+                </div>
+                <div class="form-group">
+                    <label for="signup-lastName">Last Name</label>
+                    <input type="text" id="signup-lastName" value="User">
+                </div>
+                <button type="submit" id="signup-submit">Signup</button>
+            </form>
+        </div>
+        
+        <div id="auth-result" class="result">No request sent yet.</div>
+    </div>
+    
+    <div id="dashboard-section" class="hidden">
+        <h2>Dashboard</h2>
+        <p>Welcome, <span id="user-name">User</span>!</p>
+        <button id="logout-btn">Logout</button>
+    </div>
+    
+    <h2>Console Logs</h2>
+    <div id="console-log"></div>
+    
+    <script>
+        // Override console.log to display in the UI
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        const originalConsoleInfo = console.info;
+        
+        const consoleLogElement = document.getElementById('console-log');
+        
+        console.log = function() {
+            const args = Array.from(arguments);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleLogElement.innerHTML += `<div class="log-entry">[LOG] ${message}</div>`;
+            consoleLogElement.scrollTop = consoleLogElement.scrollHeight;
+            originalConsoleLog.apply(console, arguments);
+        };
+        
+        console.error = function() {
+            const args = Array.from(arguments);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleLogElement.innerHTML += `<div class="log-entry error">[ERROR] ${message}</div>`;
+            consoleLogElement.scrollTop = consoleLogElement.scrollHeight;
+            originalConsoleError.apply(console, arguments);
+        };
+        
+        console.warn = function() {
+            const args = Array.from(arguments);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleLogElement.innerHTML += `<div class="log-entry warning">[WARN] ${message}</div>`;
+            consoleLogElement.scrollTop = consoleLogElement.scrollHeight;
+            originalConsoleWarn.apply(console, arguments);
+        };
+        
+        console.info = function() {
+            const args = Array.from(arguments);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleLogElement.innerHTML += `<div class="log-entry info">[INFO] ${message}</div>`;
+            consoleLogElement.scrollTop = consoleLogElement.scrollHeight;
+            originalConsoleInfo.apply(console, arguments);
+        };
+        
+        // Configuration
+        const CONFIG = {
+            API_BASE_URL: 'http://localhost:3030',
+            LOGIN_ENDPOINT: '/api/login',
+            SIGNUP_ENDPOINT: '/api/signup',
+            PROFILE_ENDPOINT: '/api/profile'
+        };
+        
+        // Debug controls
+        document.getElementById('clear-logs').addEventListener('click', () => {
+            consoleLogElement.innerHTML = '';
+        });
+        
+        document.getElementById('clear-storage').addEventListener('click', () => {
+            localStorage.clear();
+            console.log('Local storage cleared');
+        });
+        
+        document.getElementById('check-config').addEventListener('click', () => {
+            console.log('Current configuration:', CONFIG);
+        });
+        
+        // Tab switching
+        document.getElementById('show-login-tab').addEventListener('click', () => {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('show-login-tab').classList.add('active');
+            document.getElementById('show-signup-tab').classList.remove('active');
+        });
+        
+        document.getElementById('show-signup-tab').addEventListener('click', () => {
+            document.getElementById('signup-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('show-signup-tab').classList.add('active');
+            document.getElementById('show-login-tab').classList.remove('active');
+        });
+        
+        // Login form submission
+        document.getElementById('login-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const resultElement = document.getElementById('auth-result');
+            
+            console.log('Login form submitted with:', { email, password: '***' });
+            
+            // Simple validation
+            if (!email || !password) {
+                console.error('Validation failed: Missing email or password');
+                resultElement.textContent = 'Please fill in all fields';
+                resultElement.className = 'result error';
+                return;
+            }
+            
+            // Show loading state
+            const submitButton = document.getElementById('login-submit');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging in...';
+            
+            try {
+                console.log('Making login request to:', CONFIG.API_BASE_URL + CONFIG.LOGIN_ENDPOINT);
+                
+                const response = await fetch(CONFIG.API_BASE_URL + CONFIG.LOGIN_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                console.log('Login response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Login response data:', data);
+                
+                if (response.ok) {
+                    // Save token and user data
+                    localStorage.setItem('jwt_token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    resultElement.textContent = 'Login successful!';
+                    resultElement.className = 'result success';
+                    
+                    // Show dashboard
+                    document.getElementById('auth-section').classList.add('hidden');
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                    document.getElementById('user-name').textContent = data.user.firstName || data.user.email;
+                } else {
+                    resultElement.textContent = data.error?.message || 'Login failed';
+                    resultElement.className = 'result error';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                resultElement.textContent = 'Error: ' + error.message;
+                resultElement.className = 'result error';
+            } finally {
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        });
+        
+        // Signup form submission
+        document.getElementById('signup-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const firstName = document.getElementById('signup-firstName').value;
+            const lastName = document.getElementById('signup-lastName').value;
+            const resultElement = document.getElementById('auth-result');
+            
+            console.log('Signup form submitted with:', { email, firstName, lastName, password: '***' });
+            
+            // Simple validation
+            if (!email || !password) {
+                console.error('Validation failed: Missing email or password');
+                resultElement.textContent = 'Please fill in all required fields';
+                resultElement.className = 'result error';
+                return;
+            }
+            
+            // Show loading state
+            const submitButton = document.getElementById('signup-submit');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Creating account...';
+            
+            try {
+                console.log('Making signup request to:', CONFIG.API_BASE_URL + CONFIG.SIGNUP_ENDPOINT);
+                console.log('With data:', { email, password: '***', firstName, lastName });
+                
+                const response = await fetch(CONFIG.API_BASE_URL + CONFIG.SIGNUP_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({ email, password, firstName, lastName })
+                });
+                
+                console.log('Signup response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Signup response data:', data);
+                
+                if (response.ok) {
+                    // Save token and user data
+                    localStorage.setItem('jwt_token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    resultElement.textContent = 'Account created successfully!';
+                    resultElement.className = 'result success';
+                    
+                    // Show dashboard
+                    document.getElementById('auth-section').classList.add('hidden');
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                    document.getElementById('user-name').textContent = data.user.firstName || data.user.email;
+                } else {
+                    resultElement.textContent = data.error?.message || 'Registration failed';
+                    resultElement.className = 'result error';
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                resultElement.textContent = 'Error: ' + error.message;
+                resultElement.className = 'result error';
+            } finally {
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        });
+        
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('user');
+            
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('auth-section').classList.remove('hidden');
+            
+            console.log('User logged out');
+        });
+        
+        // Check if user is already logged in
+        const checkAuthStatus = () => {
+            const token = localStorage.getItem('jwt_token');
+            const userJson = localStorage.getItem('user');
+            
+            if (token && userJson) {
+                try {
+                    const user = JSON.parse(userJson);
+                    console.log('User already logged in:', user);
+                    
+                    document.getElementById('auth-section').classList.add('hidden');
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                    document.getElementById('user-name').textContent = user.firstName || user.email;
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                }
+            }
+        };
+        
+        // Initialize
+        checkAuthStatus();
+        console.log('Debug page initialized');
+    </script>
+</body>
+</html> 

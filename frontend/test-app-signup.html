@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Signup Test (Exact Implementation)</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; }
+        button { padding: 10px 15px; background: #0077c5; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0, 0, 0, 0.1); border-radius: 50%; border-top-color: #0077c5; animation: spin 1s ease-in-out infinite; margin-right: 10px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h1>App Signup Test (Exact Implementation)</h1>
+    
+    <form id="signupForm">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required value="test1234@example.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" required value="password123">
+        </div>
+        <div class="form-group">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" value="Test">
+        </div>
+        <div class="form-group">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" value="User">
+        </div>
+        <button type="submit" id="signupButton">Sign Up</button>
+    </form>
+    
+    <h2>Result:</h2>
+    <div id="result">No request sent yet.</div>
+
+    <script>
+        // First, add the CONFIG object that's in config.js
+        const CONFIG = {
+            API_BASE_URL: 'http://localhost:3030',
+            LOGIN_ENDPOINT: '/api/login',
+            SIGNUP_ENDPOINT: '/api/signup',
+            PROFILE_ENDPOINT: '/api/profile',
+            PROCESS_VOICE_ENDPOINT: '/api/process-voice',
+            CREATE_INVOICE_ENDPOINT: '/api/invoices'
+        };
+
+        // This function exactly replicates the handleSignup function from auth.js
+        async function handleSignup(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            const button = document.getElementById('signupButton');
+            const originalButtonText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<span class="spinner"></span> Signing up...';
+            button.disabled = true;
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            
+            // Enhanced logging - Log form submission
+            console.log('Form submitted with:', { 
+                email, 
+                firstName, 
+                lastName,
+                password: '***'  // Masked for security
+            });
+            
+            // Validate form
+            if (!email || !password) {
+                console.log('Validation error: Missing email or password');
+                resultDiv.style.color = 'red';
+                resultDiv.innerHTML = 'Email and password are required.';
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+                return;
+            }
+            
+            if (password.length < 6) {
+                console.log('Validation error: Password too short');
+                resultDiv.style.color = 'red';
+                resultDiv.innerHTML = 'Password must be at least 6 characters.';
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+                return;
+            }
+            
+            // Log the signup request that will be made
+            const signupUrl = `${CONFIG.API_BASE_URL}${CONFIG.SIGNUP_ENDPOINT}`;
+            console.log('Making signup request to:', signupUrl);
+            console.log('With data:', { email, firstName, lastName, password: '***' });
+            
+            try {
+                const response = await fetch(signupUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password, firstName, lastName })
+                });
+                
+                // Log response status
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    // Extract token and user
+                    const token = data.token;
+                    const user = data.user;
+                    
+                    console.log('Extracted token and user:', { token: token ? 'exists' : 'missing', user });
+                    
+                    // Store token and user in localStorage
+                    localStorage.setItem('jwt_token', token);
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    resultDiv.style.color = 'green';
+                    resultDiv.innerHTML = `
+                        <p>Signup successful!</p>
+                        <p>User: ${JSON.stringify(user, null, 2)}</p>
+                        <p>Token: ${token ? token.substring(0, 10) + '...' : 'None'}</p>
+                    `;
+                    
+                    // No redirect in this test
+                    console.log('Signup successful');
+                } else {
+                    // Handle error
+                    resultDiv.style.color = 'red';
+                    resultDiv.innerHTML = `
+                        <p>Registration failed:</p>
+                        <p>${data.message || JSON.stringify(data)}</p>
+                    `;
+                    console.log('Signup failed:', data.message || data);
+                }
+            } catch (error) {
+                resultDiv.style.color = 'red';
+                resultDiv.innerHTML = `
+                    <p>Network error:</p>
+                    <p>${error.message}</p>
+                    <p>This could be due to CORS issues or the server being unavailable.</p>
+                `;
+                console.error('Error during signup:', error);
+            } finally {
+                // Reset button state
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+            }
+        }
+
+        // Add the event listener
+        document.getElementById('signupForm').addEventListener('submit', handleSignup);
+    </script>
+</body>
+</html> 

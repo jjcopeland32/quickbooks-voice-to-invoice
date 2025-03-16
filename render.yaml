@@ -1,0 +1,90 @@
+services:
+  - type: web
+    name: quickbooks-voice-invoice-api
+    env: node
+    plan: starter
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        fromService:
+          name: quickbooks-voice-invoice-frontend
+          type: web
+          property: url
+      - key: CORS_ORIGIN
+        fromService:
+          name: quickbooks-voice-invoice-frontend
+          type: web
+          property: url
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: MONGODB_URI
+        fromDatabase:
+          name: quickbooks-voice-invoice-db
+          property: connectionString
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: QB_CLIENT_ID
+        sync: false
+      - key: QB_CLIENT_SECRET
+        sync: false
+      - key: QB_REDIRECT_URI
+        value: https://quickbooks-voice-invoice-api.onrender.com/auth/qbo/callback
+      - key: QB_ENVIRONMENT
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX
+        value: 100
+    autoDeploy: true
+
+  - type: web
+    name: quickbooks-voice-invoice-frontend
+    env: static
+    buildCommand: echo "No build required for static site"
+    staticPublishPath: ./frontend
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /*.html
+        name: Cache-Control
+        value: no-cache
+      - path: /*.js
+        name: Cache-Control
+        value: max-age=31536000
+      - path: /*.css
+        name: Cache-Control
+        value: max-age=31536000
+      - path: /*.png
+        name: Cache-Control
+        value: max-age=31536000
+      - path: /*.jpg
+        name: Cache-Control
+        value: max-age=31536000
+      - path: /*.svg
+        name: Cache-Control
+        value: max-age=31536000
+      - path: /*.json
+        name: Cache-Control
+        value: max-age=31536000
+    autoDeploy: true
+
+databases:
+  - name: quickbooks-voice-invoice-db
+    plan: starter
+    databaseName: quickbooks_voice_invoice
+    ipAllowList: [] 

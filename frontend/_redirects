@@ -1,0 +1,8 @@
+# Netlify redirects file
+
+# Proxy API requests to backend
+/api/*  https://your-backend-url.onrender.com/api/:splat  200
+/oauth/*  https://your-backend-url.onrender.com/oauth/:splat  200
+
+# SPA fallback - redirect all other paths to index.html
+/*    /index.html   200 

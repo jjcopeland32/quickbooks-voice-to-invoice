@@ -1,0 +1,22 @@
+{
+  "name": "quickbooks-voice-invoice",
+  "version": "1.0.0",
+  "description": "A web application that allows users to create QuickBooks invoices using voice commands",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "docker-compose up",
+    "build": "echo 'No build required for frontend'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "quickbooks",
+    "voice",
+    "invoice",
+    "openai",
+    "web-speech-api"
+  ],
+  "author": "",
+  "license": "MIT"
+}

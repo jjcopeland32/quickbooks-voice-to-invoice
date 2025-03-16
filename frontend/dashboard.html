@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - QuickBooks Voice-to-Invoice</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>QuickBooks Voice-to-Invoice</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="invoices.html">Invoices</a></li>
+                    <li><a href="settings.html">Settings</a></li>
+                    <li><a href="#" id="logout-btn">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="welcome-section">
+                <h2>Welcome, <span id="user-name">User</span>!</h2>
+                <p>Use voice commands to create invoices in QuickBooks.</p>
+            </section>
+
+            <section class="quickbooks-connection" id="quickbooks-connection">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>QuickBooks Connection</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="not-connected" style="display: none;">
+                            <p>Connect your QuickBooks account to start creating invoices with voice commands.</p>
+                            <button id="connect-quickbooks-btn" class="btn btn-primary">
+                                <i class="fas fa-link"></i> Connect to QuickBooks
+                            </button>
+                        </div>
+                        <div id="connected" style="display: none;">
+                            <p class="success-message">
+                                <i class="fas fa-check-circle"></i> Connected to QuickBooks
+                            </p>
+                            <p>Your QuickBooks account is connected. You can now create invoices with voice commands.</p>
+                            <button id="disconnect-quickbooks-btn" class="btn btn-danger">
+                                <i class="fas fa-unlink"></i> Disconnect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="voice-commands" id="voice-commands" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Voice Commands</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Click the microphone button and speak your invoice details.</p>
+                        <p>Example: "Create an invoice for John Doe for 2 hours of consulting at $150 per hour."</p>
+                        
+                        <div class="voice-input">
+                            <button id="start-recording-btn" class="btn btn-primary">
+                                <i class="fas fa-microphone"></i> Start Recording
+                            </button>
+                            <button id="stop-recording-btn" class="btn btn-danger" style="display: none;">
+                                <i class="fas fa-stop"></i> Stop Recording
+                            </button>
+                        </div>
+                        
+                        <div class="recording-status" id="recording-status" style="display: none;">
+                            <div class="recording-indicator">
+                                <div class="recording-pulse"></div>
+                            </div>
+                            <p>Recording... Speak now</p>
+                        </div>
+                        
+                        <div class="transcript" id="transcript-container" style="display: none;">
+                            <h4>Transcript:</h4>
+                            <p id="transcript"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="recent-invoices" id="recent-invoices" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Invoices</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-invoices-table">
+                                    <!-- Invoices will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="invoices.html" class="btn btn-secondary">View All Invoices</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 QuickBooks Voice-to-Invoice. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Alert Modal -->
+    <div class="modal" id="alert-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modal-title">Alert</h3>
+            <p id="modal-message"></p>
+            <div class="modal-footer">
+                <button id="modal-ok-btn" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html> 

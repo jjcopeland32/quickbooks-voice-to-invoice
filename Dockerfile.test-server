@@ -1,0 +1,16 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY backend/test-apis.js ./backend/
+
+# Install dependencies (if needed)
+RUN npm install express cors
+
+# Expose the port
+EXPOSE 3030
+
+# Start the server
+CMD ["node", "backend/test-apis.js"] 

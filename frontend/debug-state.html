@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBooks Voice-to-Invoice - Debug State</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #0077c5;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #0077c5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button.danger {
+            background-color: #d9534f;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .action-buttons {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QuickBooks Voice-to-Invoice - Debug State</h1>
+    
+    <div class="card">
+        <h2>Application State</h2>
+        <div id="stateInfo"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Event Listeners</h2>
+        <div id="eventListeners"></div>
+    </div>
+    
+    <div class="card">
+        <h2>DOM Structure</h2>
+        <div id="domStructure"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Actions</h2>
+        <div class="action-buttons">
+            <button id="fixLoginBtn">Fix Login Button</button>
+            <button id="fixSignupBtn">Fix Signup Button</button>
+            <button id="resetApp" class="danger">Reset Application</button>
+            <button id="returnToApp">Return to Application</button>
+        </div>
+    </div>
+    
+    <script>
+        // Display current state information
+        function updateStateInfo() {
+            const stateInfo = document.getElementById('stateInfo');
+            const token = localStorage.getItem('qb_voice_auth_token');
+            const user = localStorage.getItem('qb_voice_user');
+            
+            let html = '<h3>Local Storage</h3>';
+            html += '<ul>';
+            html += `<li>Authentication Token: ${token ? 'Present' : 'Not found'}</li>`;
+            html += `<li>User Data: ${user ? 'Present' : 'Not found'}</li>`;
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    html += '<ul>';
+                    html += `<li>Email: ${userData.email || 'N/A'}</li>`;
+                    html += `<li>Name: ${userData.firstName || ''} ${userData.lastName || ''}</li>`;
+                    html += '</ul>';
+                } catch (e) {
+                    html += '<li>Error parsing user data</li>';
+                }
+            }
+            
+            html += '</ul>';
+            
+            // List all localStorage items
+            html += '<h3>All LocalStorage Items</h3>';
+            html += '<pre>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                let value = localStorage.getItem(key);
+                
+                // Truncate long values
+                if (value && value.length > 50) {
+                    value = value.substring(0, 50) + '...';
+                }
+                
+                html += `${key}: ${value}\n`;
+            }
+            html += '</pre>';
+            
+            stateInfo.innerHTML = html;
+        }
+        
+        // Check event listeners
+        function checkEventListeners() {
+            const eventListeners = document.getElementById('eventListeners');
+            
+            // We'll open the main page in an iframe to check its event listeners
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'index.html';
+            
+            document.body.appendChild(iframe);
+            
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Check login and signup buttons
+                    const loginBtn = iframeDoc.getElementById('login-btn');
+                    const signupBtn = iframeDoc.getElementById('signup-btn');
+                    
+                    let html = '<h3>Button Status</h3>';
+                    html += '<ul>';
+                    
+                    if (loginBtn) {
+                        html += `<li>Login Button: Found</li>`;
+                        html += `<li>Login Button Visible: ${!loginBtn.classList.contains('hidden')}</li>`;
+                        html += `<li>Login Button hasEventListener: ${loginBtn.hasEventListener || 'Not set'}</li>`;
+                    } else {
+                        html += `<li>Login Button: Not found</li>`;
+                    }
+                    
+                    if (signupBtn) {
+                        html += `<li>Signup Button: Found</li>`;
+                        html += `<li>Signup Button Visible: ${!signupBtn.classList.contains('hidden')}</li>`;
+                        html += `<li>Signup Button hasEventListener: ${signupBtn.hasEventListener || 'Not set'}</li>`;
+                    } else {
+                        html += `<li>Signup Button: Not found</li>`;
+                    }
+                    
+                    html += '</ul>';
+                    
+                    // Check forms
+                    const loginForm = iframeDoc.getElementById('login-form');
+                    const signupForm = iframeDoc.getElementById('signup-form');
+                    
+                    html += '<h3>Form Status</h3>';
+                    html += '<ul>';
+                    
+                    if (loginForm) {
+                        html += `<li>Login Form: Found</li>`;
+                        html += `<li>Login Form Visible: ${!loginForm.classList.contains('hidden')}</li>`;
+                    } else {
+                        html += `<li>Login Form: Not found</li>`;
+                    }
+                    
+                    if (signupForm) {
+                        html += `<li>Signup Form: Found</li>`;
+                        html += `<li>Signup Form Visible: ${!signupForm.classList.contains('hidden')}</li>`;
+                    } else {
+                        html += `<li>Signup Form: Not found</li>`;
+                    }
+                    
+                    html += '</ul>';
+                    
+                    // Check sections
+                    const authSection = iframeDoc.getElementById('auth-section');
+                    const dashboardSection = iframeDoc.getElementById('dashboard-section');
+                    
+                    html += '<h3>Section Status</h3>';
+                    html += '<ul>';
+                    
+                    if (authSection) {
+                        html += `<li>Auth Section: Found</li>`;
+                        html += `<li>Auth Section Visible: ${!authSection.classList.contains('hidden')}</li>`;
+                    } else {
+                        html += `<li>Auth Section: Not found</li>`;
+                    }
+                    
+                    if (dashboardSection) {
+                        html += `<li>Dashboard Section: Found</li>`;
+                        html += `<li>Dashboard Section Visible: ${!dashboardSection.classList.contains('hidden')}</li>`;
+                    } else {
+                        html += `<li>Dashboard Section: Not found</li>`;
+                    }
+                    
+                    html += '</ul>';
+                    
+                    eventListeners.innerHTML = html;
+                    
+                    // Check DOM structure
+                    const domStructure = document.getElementById('domStructure');
+                    domStructure.innerHTML = `<pre>${getElementStructure(iframeDoc.body, 0)}</pre>`;
+                    
+                } catch (error) {
+                    eventListeners.innerHTML = `<p class="error">Error checking event listeners: ${error.message}</p>`;
+                }
+                
+                // Remove the iframe after we're done
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            };
+        }
+        
+        // Helper function to get element structure
+        function getElementStructure(element, level) {
+            if (!element) return '';
+            
+            const indent = '  '.repeat(level);
+            let result = `${indent}<${element.tagName.toLowerCase()}`;
+            
+            if (element.id) {
+                result += ` id="${element.id}"`;
+            }
+            
+            if (element.className) {
+                result += ` class="${element.className}"`;
+            }
+            
+            if (element.style && element.style.display) {
+                result += ` style="display: ${element.style.display}"`;
+            }
+            
+            result += '>\n';
+            
+            // Only go 3 levels deep to avoid too much output
+            if (level < 3) {
+                for (let i = 0; i < element.children.length; i++) {
+                    result += getElementStructure(element.children[i], level + 1);
+                }
+            } else if (element.children.length > 0) {
+                result += `${indent}  ... (${element.children.length} children)\n`;
+            }
+            
+            return result;
+        }
+        
+        // Fix login button
+        document.getElementById('fixLoginBtn').addEventListener('click', () => {
+            localStorage.setItem('fix_login_btn', 'true');
+            alert('Login button fix flag set. Return to the application to apply the fix.');
+        });
+        
+        // Fix signup button
+        document.getElementById('fixSignupBtn').addEventListener('click', () => {
+            localStorage.setItem('fix_signup_btn', 'true');
+            alert('Signup button fix flag set. Return to the application to apply the fix.');
+        });
+        
+        // Reset application
+        document.getElementById('resetApp').addEventListener('click', () => {
+            localStorage.clear();
+            localStorage.setItem('reset_ui_state', 'true');
+            alert('Application reset. Return to the application to see the changes.');
+            updateStateInfo();
+        });
+        
+        // Return to application
+        document.getElementById('returnToApp').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+        
+        // Initialize
+        updateStateInfo();
+        checkEventListeners();
+    </script>
+</body>
+</html> 

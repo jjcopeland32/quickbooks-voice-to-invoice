@@ -1,0 +1,33 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="248" fill="url(#paint0_linear)" stroke="#FFFFFF" stroke-width="12"/>
+  
+  <!-- Microphone shape -->
+  <path d="M256 300C282.510 300 304 278.510 304 252V172C304 145.490 282.510 124 256 124C229.490 124 208 145.490 208 172V252C208 278.510 229.490 300 256 300Z" fill="white" stroke="#2CA01C" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Microphone stand -->
+  <path d="M182 232V252C182 293.420 216.579 328 258 328H254C295.420 328 330 293.420 330 252V232" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Sound waves -->
+  <path d="M256 328V376" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M208 376H304" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Doc icon -->
+  <rect x="304" y="280" width="80" height="104" rx="8" fill="#00A6ED" stroke="white" stroke-width="6"/>
+  <line x1="318" y1="302" x2="370" y2="302" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="318" y1="322" x2="370" y2="322" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="318" y1="342" x2="350" y2="342" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Dollar sign -->
+  <path d="M352 256V232C352 223.163 344.837 216 336 216H320C311.163 216 304 223.163 304 232V240C304 248.837 311.163 256 320 256H336C344.837 256 352 263.163 352 272V280C352 288.837 344.837 296 336 296H320C311.163 296 304 288.837 304 280" stroke="#2CA01C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M328 216V200" stroke="#2CA01C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M328 296V312" stroke="#2CA01C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="76.5" y1="76" x2="436" y2="436" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00A6ED"/>
+      <stop offset="1" stop-color="#2CA01C"/>
+    </linearGradient>
+  </defs>
+</svg> 

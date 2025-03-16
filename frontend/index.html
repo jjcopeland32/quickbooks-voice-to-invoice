@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBooks Voice-to-Invoice</title>
+    <meta name="description" content="Create QuickBooks invoices using voice commands">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon and PWA icons -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="apple-touch-icon" href="assets/logo192.png">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS specific PWA tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="QB Voice Invoice">
+    <meta name="theme-color" content="#00A6ED">
+    
+    <!-- Security headers - Updated to be more permissive for testing -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:8081; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.openai.com http://localhost:8081; img-src 'self' data:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Global Configuration -->
+    <script>
+        // Load configuration from external config.js file
+        document.addEventListener('DOMContentLoaded', function() {
+            // Helper functions
+            function isAuthenticated() {
+                return localStorage.getItem('qb_voice_auth_token') !== null;
+            }
+
+            // Check authentication on load
+            if (isAuthenticated()) {
+                console.log('User is authenticated, checking token validity...');
+                // Let the Auth module handle redirecting to dashboard if token is valid
+            } else {
+                console.log('User is not authenticated, showing login options');
+            }
+        });
+    </script>
+    
+    <!-- Reset UI State Check -->
+    <script>
+        // Check if we need to reset the UI state
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('reset_ui_state') === 'true') {
+                console.log('Resetting UI state...');
+                
+                // Reset UI elements
+                const authSection = document.getElementById('auth-section');
+                const dashboardSection = document.getElementById('dashboard-section');
+                const invoiceSection = document.getElementById('invoice-section');
+                const loginForm = document.getElementById('login-form');
+                const signupForm = document.getElementById('signup-form');
+                const loginBtn = document.getElementById('login-btn');
+                const signupBtn = document.getElementById('signup-btn');
+                
+                if (authSection) authSection.classList.remove('hidden');
+                if (dashboardSection) dashboardSection.classList.add('hidden');
+                if (invoiceSection) invoiceSection.classList.add('hidden');
+                if (loginForm) loginForm.classList.add('hidden');
+                if (signupForm) signupForm.classList.add('hidden');
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (signupBtn) signupBtn.classList.remove('hidden');
+                
+                // Clear the reset flag
+                localStorage.removeItem('reset_ui_state');
+                
+                console.log('UI state reset complete');
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>QuickBooks Voice-to-Invoice</h1>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="welcome-section">
+                <h2>Welcome to QuickBooks Voice-to-Invoice</h2>
+                <p>Create invoices in QuickBooks using voice commands. Simply speak your invoice details and let our app do the rest.</p>
+            </section>
+
+            <div id="auth-section" class="row">
+                <!-- Authentication Buttons -->
+                <div class="auth-buttons text-center mb-3">
+                    <button id="login-btn" class="btn btn-primary">Login</button>
+                    <button id="signup-btn" class="btn btn-secondary">Sign Up</button>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card hidden" id="login-form-container">
+                        <div class="card-header">
+                            <h3>Login</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="login-form">
+                                <div class="form-group">
+                                    <label for="login-email" class="form-label">Email</label>
+                                    <input type="email" id="login-email" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="login-password" class="form-label">Password</label>
+                                    <input type="password" id="login-password" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </form>
+                            <div id="login-auth-status" class="status-message"></div>
+                            <p class="mt-3">Don't have an account? <a href="#" id="show-signup">Register</a></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card hidden" id="signup-form-container">
+                        <div class="card-header">
+                            <h3>Register</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="signup-form">
+                                <div class="form-group">
+                                    <label for="signup-firstName" class="form-label">First Name</label>
+                                    <input type="text" id="signup-firstName" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-lastName" class="form-label">Last Name</label>
+                                    <input type="text" id="signup-lastName" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-email" class="form-label">Email</label>
+                                    <input type="email" id="signup-email" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-password" class="form-label">Password</label>
+                                    <input type="password" id="signup-password" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Register</button>
+                            </form>
+                            <div id="signup-auth-status" class="status-message"></div>
+                            <p class="mt-3">Already have an account? <a href="#" id="show-login">Login</a></p>
+                        </div>
+                    </div>
+                    
+                    <div class="card" id="features-card">
+                        <div class="card-header">
+                            <h3>Features</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li><i class="fas fa-microphone"></i> Create invoices using voice commands</li>
+                                <li><i class="fas fa-bolt"></i> Save time with automated invoice creation</li>
+                                <li><i class="fas fa-sync"></i> Seamless integration with QuickBooks</li>
+                                <li><i class="fas fa-mobile-alt"></i> Works on desktop and mobile devices</li>
+                                <li><i class="fas fa-shield-alt"></i> Secure authentication and data protection</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Section (Hidden by default) -->
+            <div id="dashboard-section" class="hidden">
+                <div class="dashboard-header">
+                    <h2>Dashboard</h2>
+                    <p>Welcome, <span id="user-name">User</span>!</p>
+                    
+                    <div class="dashboard-actions">
+                        <button id="create-invoice-btn" class="btn btn-primary">Create Invoice</button>
+                        <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>QuickBooks Status</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="qbo-status" class="status-indicator not-connected">
+                                <span class="status-icon"></span>
+                                <span class="status-text">Not Connected</span>
+                            </div>
+                            <div class="qbo-actions">
+                                <button id="connect-qb-btn" class="btn btn-primary">Connect to QuickBooks</button>
+                                <button id="disconnect-qb-btn" class="btn btn-danger hidden">Disconnect</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3>Recent Invoices</h3>
+                        </div>
+                        <div class="card-body">
+                            <p id="no-invoices-message">No invoices yet. Create your first invoice using voice commands!</p>
+                            <div id="invoices-list" class="hidden">
+                                <!-- Invoice list will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Section (Hidden by default) -->
+            <div id="invoice-section" class="hidden">
+                <!-- Invoice form will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 QuickBooks Voice-to-Invoice. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Alert Modal -->
+    <div class="modal" id="alert-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modal-title">Alert</h3>
+            <p id="modal-message"></p>
+            <div class="modal-footer">
+                <button id="modal-ok-btn" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Check API connectivity on page load -->
+    <script>
+        function checkApiConnection() {
+            fetch(`${CONFIG.API_BASE_URL}/health`)
+                .then(response => {
+                    if (!response.ok) throw new Error('API health check failed');
+                    console.log('API connection confirmed');
+                })
+                .catch(error => {
+                    console.error(`API connection error: ${error.message}`);
+                    alert('Cannot connect to API server. Check network or server status.');
+                });
+        }
+
+        // Run the check when the document is loaded
+        document.addEventListener('DOMContentLoaded', checkApiConnection);
+    </script>
+</body>
+</html> 
